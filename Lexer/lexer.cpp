@@ -3,7 +3,7 @@
 #include <fstream>
 #include <cctype>
 #include <regex>
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+//#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
 
 using namespace std;
@@ -608,16 +608,20 @@ public:
     }
 };
 
-/*int main(int argc, char *argv[])
+#ifndef CATCH_CONFIG_MAIN
+
+int main(int argc, char *argv[])
 {
     string s;
     Lexer lex;
-
+    
+    int j = 1;
     lex.file.open(argv[1]);
     lex.getTokens();
     lex.file.close();
+}
 
-}*/
+#else
 
 TEST_CASE("Gonna meet <public>", "First")
 {
@@ -659,4 +663,4 @@ TEST_CASE("Gonna meet sign <{> but there is decimal number", "Fifth")
     
 }
 
-
+#endif
