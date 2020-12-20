@@ -44,28 +44,17 @@ static bool isLoopDead(Loop *L, ScalarEvolution &SE,
                        SmallVectorImpl<BasicBlock *> &ExitingBlocks,
                        BasicBlock *ExitBlock, bool &Changed,
                        BasicBlock *Preheader) {
-  // Make sure that all PHI entries coming from the loop are loop invariant.
-  // Because the code is in LCSSA form, any values used outside of the loop
-  // must pass through a PHI in the exit block, meaning that this check is
-  // sufficient to guarantee that no loop-variant values are used outside
-  // of the loop.
   bool AllEntriesInvariant = true;
   bool AllOutgoingValuesSame = true;
   for (PHINode &P : ExitBlock->phis()) {
     Value *incoming = P.getIncomingValueForBlock(ExitingBlocks[0]);
 
-    // Make sure all exiting blocks produce the same incoming value for the exit
-    // block.  If there are different incoming values for different exiting
-    // blocks, then it is impossible to statically determine which value should
-    // be used.
     AllOutgoingValuesSame =
         all_of(makeArrayRef(ExitingBlocks).slice(1), [&](BasicBlock *BB) {
           return incoming == P.getIncomingValueForBlock(BB);
         });
-
     if (!AllOutgoingValuesSame)
       break;
-
     if (Instruction *I = dyn_cast<Instruction>(incoming))
       if (!L->makeLoopInvariant(I, Changed, Preheader->getTerminator())) {
         AllEntriesInvariant = false;
@@ -75,7 +64,7 @@ static bool isLoopDead(Loop *L, ScalarEvolution &SE,
 
   if (Changed)
     SE.forgetLoopDispositions(L);
-
+  
   if (!AllEntriesInvariant || !AllOutgoingValuesSame)
     return false;
 
